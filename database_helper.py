@@ -1,16 +1,20 @@
+import os
 import streamlit as st
+from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
 import oracledb
 import array
 from type_helper import EmbeddingsScoredType
 
+load_dotenv()
+
 
 @st.cache_resource
 def init_db_connection() -> oracledb.Connection:
     return oracledb.connect(
-        user="rag_app",
-        password="password123",
-        dsn="localhost:1522/FREEPDB1"
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        dsn=os.getenv("DB_DSN")
     )
 
 

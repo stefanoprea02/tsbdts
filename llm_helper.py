@@ -13,9 +13,11 @@ def load_llm():
     repo_id = os.getenv("MODEL_REPO")
     filename = os.getenv("MODEL_FILE")
     local_dir = os.getenv("MODEL_PATH", "./models")
+    mode = os.getenv("HARDWARE_MODE", "CPU")
+    context_size = int(os.getenv("CONTEXT_SIZE", 4096))
 
     os.makedirs(local_dir, exist_ok=True)
-    model_full_path = os.path.join(local_dir, filename)
+    model_full_path = os.path.abspath(os.path.join(local_dir, filename))
 
     if not os.path.exists(model_full_path):
         with st.spinner(f"Downloading {filename} from Hugging Face... Please wait."):
@@ -25,9 +27,12 @@ def load_llm():
                 local_dir=local_dir
             )
 
+    layers = -1 if mode == "GPU" else 0
+
     return Llama(
-        model_path=model_full_path, 
-        n_ctx=4096, 
+        model_path=model_full_path,
+        n_gpu_layers=layers,
+        n_ctx=context_size,
         verbose=False
     )
 
