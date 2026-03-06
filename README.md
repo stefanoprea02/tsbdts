@@ -67,7 +67,7 @@ pip install llama-cpp-python
 
 ```
 $env:CMAKE_ARGS="-DGGML_VULKAN=on"
-pip install llama-cpp-python --no-binary llama-cpp-python
+pip install llama-cpp-python --no-binary llama-cpp-python --no-cache-dir
 ```
 
 ## 3. Environment Variables
