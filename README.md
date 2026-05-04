@@ -95,3 +95,9 @@ docker exec -it oracle23ai sqlplus rag_app/password123@FREEPDB1
 
 TRUNCATE TABLE document_chunks;
 ```
+
+## Run pyright
+
+```
+pyright --pythonpath "$env:VIRTUAL_ENV\Scripts\python.exe" .
+```

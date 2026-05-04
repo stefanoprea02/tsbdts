@@ -16,6 +16,9 @@ def load_llm():
     mode = os.getenv("HARDWARE_MODE", "CPU")
     context_size = int(os.getenv("CONTEXT_SIZE", 4096))
 
+    if not repo_id or not filename:
+        raise RuntimeError("MODEL_REPO and MODEL_FILE environment variables must be set.")
+
     os.makedirs(local_dir, exist_ok=True)
     model_full_path = os.path.abspath(os.path.join(local_dir, filename))
 
@@ -44,7 +47,7 @@ def generate_prompt(
         document_info: EmbeddingsScoredType
     ) -> str:
     chat_text = "\n".join([f"{mem['text_content']}" for mem in chat_memory])
-    document_text = "\n".join([f"Source: {mem['file_name']} - {mem['page']}: {mem['text_content']}" for mem in document_info])
+    document_text = "\n".join([f"Source: {mem['file_name']} - {mem.get('page', 'N/A')}: {mem['text_content']}" for mem in document_info])
             
     augmented_prompt = f"""Use the following context to answer the question. 
     If the answer isn't in the context, use your general knowledge.

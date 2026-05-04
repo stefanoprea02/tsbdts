@@ -1,12 +1,12 @@
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 class EmbeddingEntry(TypedDict):
     text_content: str
-    page: int | None
-    file_name: str | None
-    vector: list[float]
-    raw_question: str | None
-    raw_response: str | None
+    file_name: str
+    page: NotRequired[int]
+    embedding: NotRequired[list[float]]
+    raw_question: NotRequired[str]
+    raw_response: NotRequired[str]
 
 class EmbeddingEntryScored(EmbeddingEntry):
     score: float

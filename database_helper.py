@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
 import oracledb
 import array
-from type_helper import EmbeddingsScoredType
+from type_helper import EmbeddingsScoredType, EmbeddingsType
 
 load_dotenv()
 
@@ -21,7 +21,7 @@ def init_db_connection() -> oracledb.Connection:
 # Inserts embeddings and related metadata into the database
 def insert_records(
         db_connection: oracledb.Connection, 
-        records: list[dict[str, str | int | list[float]]]
+        records: EmbeddingsType
     ) -> None:
     cursor = db_connection.cursor()
     for record in records:
