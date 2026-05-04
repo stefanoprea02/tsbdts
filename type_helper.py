@@ -1,15 +1,29 @@
-from typing import NotRequired, TypedDict
+from typing import TypedDict
 
-class EmbeddingEntry(TypedDict):
+
+class DocChunk(TypedDict):
     text_content: str
     file_name: str
-    page: NotRequired[int]
-    embedding: NotRequired[list[float]]
-    raw_question: NotRequired[str]
-    raw_response: NotRequired[str]
+    page: int
+    embedding: list[float]
 
-class EmbeddingEntryScored(EmbeddingEntry):
+
+class ChatTurn(TypedDict):
+    text_content: str
+    raw_question: str
+    raw_response: str
+    embedding: list[float]
+
+
+class DocChunkScored(TypedDict):
+    text_content: str
+    file_name: str
+    page: int
     score: float
 
-EmbeddingsType = list[EmbeddingEntry]
-EmbeddingsScoredType = list[EmbeddingEntryScored]
+
+class ChatTurnScored(TypedDict):
+    text_content: str
+    raw_question: str
+    raw_response: str
+    score: float

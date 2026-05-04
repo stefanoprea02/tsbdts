@@ -2,48 +2,62 @@ from pypdf import PdfReader
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
-from type_helper import EmbeddingsType
+from type_helper import DocChunk
 
 
+PAGE_SEPARATOR = "\n"
 splitter = RecursiveCharacterTextSplitter(
     chunk_size=1000,
     chunk_overlap=100,
-    separators=["\n\n", "\n", " ", ""]
+    separators=["\n\n", "\n", " ", ""],
+    add_start_index=True,
 )
 
 
-# Splits the pdf files in multiple chunks per page
-def extract_pages(pdf_file: UploadedFile, embeddings_model: HuggingFaceEmbeddings) -> EmbeddingsType:
+# Splits the pdf files in multiple chunks
+def extract_pages(pdf_file: UploadedFile, embeddings_model: HuggingFaceEmbeddings) -> list[DocChunk]:
     reader = PdfReader(pdf_file)
-    parsed_chunks = []
-    pages = []
-    pages_metadata = []
-
+    
+    parts: list[str] = []
+    page_offsets: list[tuple[int, int]] = []
+    offset = 0
     for page_num, page in enumerate(reader.pages, start=1):
         extracted_text = page.extract_text()
-        if extracted_text:
-            pages.append(extracted_text)
-            pages_metadata.append({
-                "file_name": pdf_file.name,
-                "page": page_num
-            })
+        if not extracted_text:
+            continue
+        extracted_text = extracted_text.strip()
+        if not extracted_text:
+            continue
+        page_offsets.append((page_num, offset))
+        parts.append(extracted_text)
+        offset += len(extracted_text) + len(PAGE_SEPARATOR)
+    full_text = PAGE_SEPARATOR.join(parts)
 
-    docs = splitter.create_documents(pages, metadatas=pages_metadata)
+    docs = splitter.create_documents([full_text])
 
+    parsed_chunks = []
     for doc in docs:
-        if len(doc.page_content) > 50:
-            parsed_chunks.append({
-                "text_content": doc.page_content,
-                "page": doc.metadata["page"],
-                "file_name": doc.metadata["file_name"],
-                "embedding": embeddings_model.embed_query(doc.page_content),
-            })
+        if len(doc.page_content) < 50:
+            continue
+        start = doc.metadata["start_index"]
+        page_num = page_offsets[0][0]
+        for p, off in page_offsets:
+            if off <= start:
+                page_num = p
+            else:
+                break
+        parsed_chunks.append({
+            "text_content": doc.page_content,
+            "page": page_num,
+            "file_name": pdf_file.name,
+            "embedding": embeddings_model.embed_query(doc.page_content),
+        })
     
     return parsed_chunks
 
 
 # Creates embeddings for the chunks and adds them to the extracted data
-def process_files(files: list[UploadedFile], embeddings_model: HuggingFaceEmbeddings) -> EmbeddingsType:
+def process_files(files: list[UploadedFile], embeddings_model: HuggingFaceEmbeddings) -> list[DocChunk]:
     extracted_data = []
 
     for f in files:

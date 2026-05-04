@@ -2,10 +2,10 @@ from llama_cpp import CreateChatCompletionResponse
 import streamlit as st
 from langchain_huggingface import HuggingFaceEmbeddings
 from file_helper import process_files
-from database_helper import init_db_connection, insert_records, fetch_records
+from database_helper import init_db_connection, insert_doc_chunks, insert_chat_turn, fetch_records
 from llm_helper import load_llm, generate_prompt
-from ui_helper import write_chat_message, write_sidebar_message
-from type_helper import EmbeddingEntry
+from ui_helper import write_chat_message, write_chat_memory_sidebar, write_doc_sidebar
+from type_helper import ChatTurn
 from typing import cast
 
 
@@ -45,7 +45,13 @@ def processs_message():
             # Process files if any and update knowledge base
             if file_number > 0:
                 parsed_files = process_files(prompt.files, embeddings_model)
-                insert_records(db_connection, parsed_files)
+                insert_doc_chunks(db_connection, parsed_files)
+
+                with st.sidebar.expander(f"Debug: chunks ({len(parsed_files)})"):
+                    for i, c in enumerate(parsed_files):
+                        st.markdown(f"**#{i} - p.{c.get('page')} - {len(c['text_content'])} chars**")
+                        st.text(c["text_content"])
+                        st.divider()
 
                 if not prompt.text:
                     write_chat_message("assistant", "Files processed.")
@@ -53,8 +59,8 @@ def processs_message():
                 
             # Fetch relevant records from DB based on prompt
             chat_memory, document_info = fetch_records(db_connection, embeddings_model, prompt.text)
-            write_sidebar_message(chat_memory, "Chat Memories")
-            write_sidebar_message(document_info, "Document Info")
+            write_chat_memory_sidebar(chat_memory, "Chat Memories")
+            write_doc_sidebar(document_info, "Document Info")
 
             prompt_augmented = generate_prompt(prompt.text, chat_memory, document_info)
             
@@ -75,14 +81,13 @@ def processs_message():
             combined_text = f"User: {prompt.text}\nAssistant: {full_response}"
             combined_embedding = embeddings_model.embed_query(combined_text)
 
-            message_record: EmbeddingEntry = {
+            message_record: ChatTurn = {
                 "text_content": combined_text,
                 "embedding": combined_embedding,
-                "file_name": "user_chat_message",
                 "raw_question": prompt.text,
                 "raw_response": full_response
             }
-            insert_records(db_connection, [message_record])
+            insert_chat_turn(db_connection, message_record)
 
             # Respond
             write_chat_message("assistant", full_response)

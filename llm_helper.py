@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from huggingface_hub import hf_hub_download
 import streamlit as st
 from llama_cpp import Llama
-from type_helper import EmbeddingsScoredType
+from type_helper import ChatTurnScored, DocChunkScored
 
 
 load_dotenv()
@@ -43,11 +43,11 @@ def load_llm():
 # Augment user prompt with context
 def generate_prompt(
         user_input: str, 
-        chat_memory: EmbeddingsScoredType, 
-        document_info: EmbeddingsScoredType
+        chat_memory: list[ChatTurnScored],
+        document_info: list[DocChunkScored]
     ) -> str:
     chat_text = "\n".join([f"{mem['text_content']}" for mem in chat_memory])
-    document_text = "\n".join([f"Source: {mem['file_name']} - {mem.get('page', 'N/A')}: {mem['text_content']}" for mem in document_info])
+    document_text = "\n".join([f"Source: {mem['file_name']} - {mem['page']}: {mem['text_content']}" for mem in document_info])
             
     augmented_prompt = f"""Use the following context to answer the question. 
     If the answer isn't in the context, use your general knowledge.
