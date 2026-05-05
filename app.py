@@ -2,7 +2,7 @@ from llama_cpp import CreateChatCompletionResponse
 import streamlit as st
 from langchain_huggingface import HuggingFaceEmbeddings
 from file_helper import process_files
-from database_helper import init_db_connection, insert_doc_chunks, insert_chat_turn, fetch_records
+from database_helper import init_db_connection, insert_doc_chunks, insert_chat_turn, fetch_records, truncate_all
 from llm_helper import load_llm, generate_prompt
 from ui_helper import write_chat_message, write_chat_memory_sidebar, write_doc_sidebar
 from type_helper import ChatTurn
@@ -93,6 +93,11 @@ def processs_message():
             write_chat_message("assistant", full_response)
 
 def main():
+    with st.sidebar:
+        if st.button("Delete conversation", use_container_width=True):
+            truncate_all(db_connection)
+            st.session_state.messages = []
+            st.rerun()
     initialize_messages()
     processs_message()
 

@@ -61,6 +61,13 @@ def insert_chat_turn(
     cursor.close()
 
 
+def truncate_all(db_connection: oracledb.Connection) -> None:
+    cursor = db_connection.cursor()
+    cursor.execute("TRUNCATE TABLE document_chunks")
+    cursor.execute("TRUNCATE TABLE chat_turns")
+    cursor.close()
+
+
 # Fetches relevant records from the database based on embedding similarity
 def fetch_records(
         db_connection: oracledb.Connection, 
