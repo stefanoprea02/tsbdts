@@ -12,7 +12,7 @@ from typing import cast
 @st.cache_resource
 def load_embedding_model():
     return HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2",
+        model_name="BAAI/bge-small-en-v1.5",
         model_kwargs={"device": "cpu"}
     )
 
@@ -32,7 +32,7 @@ def initialize_messages():
 
 
 def processs_message():
-    if prompt := st.chat_input("Say something", accept_file='multiple'):
+    if prompt := st.chat_input("Say something", accept_file='multiple', max_chars=400):
         file_number = len(prompt.files)
         user_text = prompt.text if prompt.text else "No user message."
         file_text = f" {file_number} file uploaded." if file_number > 0 else ""
@@ -70,7 +70,7 @@ def processs_message():
                     {"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user", "content": prompt_augmented}
                 ],
-                max_tokens=400,
+                max_tokens=300,
                 temperature=0.3,
                 repeat_penalty=1.15,
                 stream=False

@@ -7,7 +7,7 @@
 Chatbot in Streamlit care:
 
 - Primeste intrebari si, optional, PDF-uri in acelasi mesaj.
-- Imparte PDF-urile in fragmente, le transforma in embeddings (`sentence-transformers/all-MiniLM-L6-v2`) si le salveaza in Oracle 23ai pe coloane `VECTOR`.
+- Imparte PDF-urile in fragmente, le transforma in embeddings (`BAAI/bge-small-en-v1.5`) si le salveaza in Oracle 23ai pe coloane `VECTOR`.
 - La fiecare intrebare, cauta in baza de date conversatiile si fragmentele cele mai apropiate semantic (`VECTOR_DISTANCE`), genereaza un prompt si il trimite la un LLM local (llama.cpp).
 - Salveaza intrebarea si raspunsul inapoi in `chat_turns` pentru a putea fi folosite mai tarziu.
 
@@ -17,7 +17,7 @@ Ce se intampla la trimiterea unui mesaj:
 
 1. `app.py` preia textul si PDF-urile (optionale) din `st.chat_input`.
 2. Daca exista PDF-uri, `file_helper` le imparte in fragmente, genereaza embeddings si `insert_doc_chunks` salveaza in `document_chunks`.
-3. `fetch_records` cauta in `chat_turns` si `document_chunks` cele mai apropiate 2 randuri sub pragul de similaritate (`0.7`).
+3. `fetch_records` cauta in `chat_turns` si `document_chunks` cele mai apropiate 2 randuri sub pragul de similaritate (`0.35`).
 4. `generate_prompt` formateaza rezultatele in prompt sub `CHAT MEMORY:` si `DOCUMENT INFORMATION:`, apoi LLM-ul raspunde.
 5. Intrebarea si raspunsul devin un nou rand in `chat_turns`.
 6. UI-ul afiseaza raspunsul si arata in sidebar ce s-a recuperat, cu scor.
@@ -92,7 +92,7 @@ def insert_doc_chunks(db_connection: oracledb.Connection, records: list[DocChunk
 **Retrieve** (`database_helper.py`)
 
 ```python
-SIMILARITY_THRESHOLD = 0.7
+SIMILARITY_THRESHOLD = 0.35
 
 cursor = db_connection.cursor()
 cursor.execute("""
@@ -118,8 +118,6 @@ cursor.close()
 
 ## 6. Capturi de ecran
 
-Demo in 6 pasi: salvare context → intrebare off-topic → recall din chat → upload PDF → retrieval din document → inca un recall.
-
 ### 1. Salvare context personal
 
 ![Cat name provided](pictures/1-cat-name-provided.png)
@@ -136,7 +134,7 @@ Intrebare legata de RAG-uri. AI-ul raspunde doar din cunostinte generale. Fetch-
 
 ![Cat name question](pictures/3-cat-name-question.png)
 
-"What's my cat's name?" gaseste o intrare in `chat_turns`. O putem vedea in sidebar cu scorul de 0.430, iar AI-ul raspunde corect.
+"What's my cat's name?" gaseste o intrare in `chat_turns`. O putem vedea in sidebar cu scorul de 0.214, iar AI-ul raspunde corect.
 
 ### 4. Upload PDF
 
@@ -148,7 +146,7 @@ Am incarcat un PDF de la curs. In sidebar gasim "Debug: chunks" unde vedem ca au
 
 ![Retrieval based on course pdf](pictures/5-retrieval-based-on-course-pdf.png)
 
-Intrebarea "What does hybrid search refer to?" gaseste fragmente si in `chat_turns`, dar si in `document_chunks`. In chat memories vedem ca a gasit intrebarea de mai devreme despre RAG-uri cu scorul 0.648, iar in document info vedem 2 fragmente din curs, primul avand scorul de 0.380.
+Intrebarea "What does hybrid search refer to?" gaseste fragmente in `document_chunks`. Acolo a gasit 2 fragmente din curs, primul avand scorul de 0.173.
 
 ### 6. Inca un recall din chat
 
@@ -156,7 +154,7 @@ Intrebarea "What does hybrid search refer to?" gaseste fragmente si in `chat_tur
 
 A doua oara cand intreb cum se numeste pisica. In chat memories vedem in continuare raspunsul corect, iar document info este gol.
 
-In concluzie, putem vedea ca pragul de 0.7 inlatura fragmentele irelevante intrebarii.
+In concluzie, putem vedea ca pragul de 0.35 inlatura fragmentele irelevante intrebarii.
 
 ## 7. Referinte bibliografice
 

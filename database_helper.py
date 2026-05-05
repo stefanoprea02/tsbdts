@@ -8,7 +8,7 @@ from type_helper import ChatTurn, ChatTurnScored, DocChunk, DocChunkScored
 
 load_dotenv()
 
-SIMILARITY_THRESHOLD = 0.7
+SIMILARITY_THRESHOLD = 0.35
 
 
 @st.cache_resource
